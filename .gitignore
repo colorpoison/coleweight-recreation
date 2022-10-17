@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+.env
+.vscode
+.git
+package-lock.json
+.prettierrc.json
+coleweightlb.csv
+config.json
