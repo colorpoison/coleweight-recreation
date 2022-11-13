@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const { Client, Collection, AttachmentBuilder, GatewayIntentBits } = require('discord.js')
 const MessageHandler = require('./handlers/MessageHandler')
 const StateHandler = require('./handlers/StateHandler')
@@ -44,7 +47,7 @@ class DiscordManager {
       else {client.on(event.name, (...args) => event.execute(...args))} 
     }
 
-    global.guild = await client.guilds.fetch(config.discord.serverID)
+    //global.guild = await client.guilds.fetch(config.discord.serverID)
 
     process.on('SIGINT', () => this.stateHandler.onClose())
   }

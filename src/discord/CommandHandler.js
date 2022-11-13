@@ -1,3 +1,8 @@
+/*
+Updated by Ninjune on 10/30/22
+- Updated applications command.
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const { Routes } = require('discord-api-types/v9')
 const config = require('../../config.json')
 const { REST } = require('@discordjs/rest')
@@ -16,7 +21,7 @@ class CommandHandler {
     }
     const rest = new REST({ version: '10' }).setToken(config.discord.token)
     
-    rest.put(Routes.applicationGuildCommands(config.discord.clientID, config.discord.serverID), { body: commands }).catch(console.error)
+    rest.put(Routes.applicationCommands(config.discord.clientID), { body: commands }).catch(console.error)
   }
 }
 

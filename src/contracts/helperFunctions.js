@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const fs = require('fs-promise')
 const { set } = require('lodash')
 const mkdirp = require('mkdirp')

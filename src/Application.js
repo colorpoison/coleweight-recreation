@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const DiscordManager = require('./discord/DiscordManager')
 
 class Application {

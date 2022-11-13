@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const chalk = require('chalk')
 
 async function discordMessage(message) {

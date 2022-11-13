@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const config = require('../../../config.json')
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const { generateID } = require('../../contracts/helperFunctions')

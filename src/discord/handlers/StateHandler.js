@@ -1,3 +1,6 @@
+/*
+Written by DuckySoLucky or Senither on ?/?/??
+*/
 const config = require('../../../config.json')
 const Logger = require('../../Logger')
 
