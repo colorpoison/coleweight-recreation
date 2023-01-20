@@ -1,8 +1,9 @@
-const { EmbedBuilder } = require("discord.js");
-const config = require("../../../config.json");
-const axios = require('axios');
-const fs = require('node:fs');
-const e = require("express");
+const { EmbedBuilder } = require("discord.js")
+const config = require("../../../config.json")
+const axios = require('axios')
+const fs = require('node:fs')
+const { getMojangData } = require("../../contracts/coleweightFunctions")
+const { badResponse } = require("../../contracts/commandResponses")
 
 module.exports = {
     name: 'link',
@@ -22,90 +23,68 @@ module.exports = {
              mojangData = "",
              userData = "",
              user = "",
+             discRows = fs.readFileSync("./csvs/discord.csv", "utf-8").split('\r\n'),
              discordPath = "./csvs/discord.csv",
-             discRows = (fs.readFileSync("./csvs/discord.csv").toString()).split('\r\n')
-             notLinked = true
+             userID,
+             writeData
+            
             try 
             {
                 let discordData = await interaction.guild.members.fetch(interaction.user)
                 user = discordData.user.username + "#" + discordData.user.discriminator
+                userID = discordData.user.id
             }
             catch 
             {
                 console.log("Error! " + e)
             }
-            for(let i = 0; i < discRows.length - 1; i++)
-            {
-                let row = discRows[i].split(" ")
 
-                if(row[0] == user)
-                {
-                    name = row[1]
-                    notLinked = false;
-                }
-            }
-            if(notLinked)
+
+            mojangData = await getMojangData(name)
+            name = mojangData.username
+            uuid = mojangData.uuid
+            if(mojangData == 101)
             {
-                try 
-                {
-                    mojangData = (await axios.get(`https://api.ashcon.app/mojang/v2/user/${name}`)).data
-                    name = mojangData.username
-                    uuid = mojangData.uuid
-                }
-                catch(e) 
-                {
-                    console.log("Error! " + e)
-                }
-                try 
-                {
-                    userData = (await axios.get(`https://api.hypixel.net/player?key=${config.api.hypixelAPIkey}&uuid=${uuid}`)).data
-                }
-                catch(e) 
-                {
-                    console.log("Error! " + e)
-                }
+                badResponse(interaction, `The bot may be rate limited on Mojang API (or name is wrong.)`)
+                return
+            }
+            try 
+            {
+                userData = (await axios.get(`https://api.hypixel.net/player?key=${config.api.hypixelAPIkey}&uuid=${uuid}`)).data
+            }
+            catch(e) 
+            {
+                badResponse(interaction, `DM Nin (linkCommand ${new Error().lineNumber}): ${e}`)
+                return
             }
 
-            if(notLinked && userData.player.socialMedia.links.DISCORD == user)
+            if(userData.player.socialMedia.links.DISCORD == user)
             {
-                writeData = fs.readFileSync(discordPath, "utf8")
-                writeData = writeData + user + " " + name + "\r\n"
+                for(let i = 0; i < discRows.length; i++)
+                {
+                    let row = discRows[i].split(" ")
+
+                    if(row[0] == userID || row[0] == undefined || row[0] == "")
+                        discRows.splice(i, 1)
+                }
+
+                discRows.push(userID + " " + name)
+                writeData = discRows.join("\r\n")
                 fs.writeFileSync(discordPath, writeData)
 
                 const embed = new EmbedBuilder()
-                    .setColor(0x0099FF)
-                    .setTitle(`Success!`)
-                    .setDescription(`Successfully linked ${user} to ${name}!`)
-                    .setFooter({ text: `Made by Ninjune#0670`})
-                interaction.followUp({ embeds: [embed] })
-            }
-            else if(notLinked == false)
-            {
-                const embed = new EmbedBuilder()
-                    .setColor(0x0099FF)
-                    .setTitle(`Error!`)
-                    .setDescription(`${user} is already linked to ${name}!`)
-                    .setFooter({ text: `Made by Ninjune#0670`})
+                .setColor(0x0099FF)
+                .setTitle(`Success!`)
+                .setDescription(`Successfully linked ${user} to ${name}!`)
+                .setFooter({ text: `Made by Ninjune#0670`})
                 interaction.followUp({ embeds: [embed] })
             }
             else 
-            {
-                const embed = new EmbedBuilder()
-                    .setColor(0x0099FF)
-                    .setTitle(`Error!`)
-                    .setDescription(`${user} is not linked to ${name} in Hypixel!`)
-                    .setFooter({ text: `Made by Ninjune#0670`})
-                interaction.followUp({ embeds: [embed] })
-            }
+                badResponse(interaction, `${name} is not linked to ${user} in Hypixel!`)
         } catch(e) 
         {
             console.log(e)
-            const embed = new EmbedBuilder()
-                .setColor(0x0099FF)
-                .setTitle(`Error`)
-                .setDescription(`Enter a valid name! (or change your nickname to minecraft ign)`)
-                .setFooter({ text: `Made by Ninjune#0670`})
-            interaction.followUp({ embeds: [embed] })
+            badResponse(interaction, `Enter a valid name! (or change your nickname to minecraft ign)`)
         }
     }
 }

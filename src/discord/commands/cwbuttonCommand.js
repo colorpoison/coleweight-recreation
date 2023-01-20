@@ -1,19 +1,20 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js")
 const config = require('../../../config.json')
+const { isStaff } = require("../../contracts/util")
 
 module.exports = {
   name: 'cwbutton',
   description: '(ADMIN) Makes a button to find Coleweight of anyone who clicks it.',
 
   execute: async (interaction, client) => {
-    if ((await interaction.guild.members.fetch(interaction.user)).roles.cache.has(config.discord.commandRole)) {
+    if (isStaff(await interaction.guild.members.fetch(interaction.user))) {
         try {
             const row = new ActionRowBuilder()
 			.addComponents(
 				new ButtonBuilder()
-					.setCustomId('cwButton')
-					.setLabel('Calculate Coleweight')
-					.setStyle(ButtonStyle.Primary),
+                .setCustomId('cwButton')
+                .setLabel('Calculate Coleweight')
+                .setStyle(ButtonStyle.Primary),
 			)
             const buttonEmbed = new EmbedBuilder()
                 .setColor(0x0099FF)

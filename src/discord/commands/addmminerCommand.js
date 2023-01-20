@@ -1,7 +1,9 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder } = require("discord.js")
 const maliciousMiners = require("../../contracts/MMinersFunctions")
 const fs = require("node:fs")
 const axios = require("axios")
+const { getMojangData } = require("../../contracts/coleweightFunctions")
+const { badResponse } = require("../../contracts/commandResponses")
 
 module.exports = {
     name: 'addmminer',
@@ -15,66 +17,88 @@ module.exports = {
         },
         {
             name: 'type',
-            description: '"macroer" or "griefer"',
+            description: '"macroer", "griefer", or "scammer"',
             type: 3,
             required: true
+        },
+        {
+            name: 'griefcount',
+            description: 'Amount of griefs (to add!)',
+            type: 3,
+            required: false
+        },
+        {
+            name: 'visible',
+            description: 'If set to false, the griefer will not be visible ingame but will still be on /findmminer.',
+            type: 3,
+            required: false
+        },
+        {
+            name: "proof",
+            description: "Proof",
+            type: 3,
+            required: false
         }
     ],
     
     execute: async (interaction, client) => {
         let name = interaction.options.getString("name"),
          type = interaction.options.getString("type"),
+         proof = interaction.options.getString("proof") ?? "",
+         griefcount = parseInt(interaction.options.getString("griefcount") ?? 1),
+         visible = interaction.options.getString("visible") ?? true,
          discordData = await interaction.guild.members.fetch(interaction.user),
-         discordUser = discordData.user.username + "#" + discordData.user.discriminator,
+         discordID = discordData.user.id,
          permUsersRows = fs.readFileSync("./csvs/mminerUsers.csv", "utf8"),
-         mojangData = "",
-         username = ""
+         mojangData = ""
+        
+        if(visible == "false") 
+            visible = false
+        else if (visible == "true")
+            visible = true
+        
+        if(griefcount != parseInt(griefcount))
+        {
+            await badResponse(interaction, `'${griefcount}' is not an integer!`)
+        }
         
         try 
         {
-            mojangData = (await axios.get(`https://api.ashcon.app/mojang/v2/user/${name}`)).data
-        } catch 
+            mojangData = await getMojangData(name)
+        } catch (error)
         { 
-            const embed = new EmbedBuilder()
-            .setColor(0x990000)
-            .setTitle("Malicious Miners")
-            .setDescription(`Error! '${name}' is not a player!`)
-            .setFooter({ text: `Made by Ninjune#0670`})
-            interaction.followUp({ embeds: [embed] })
+            await badResponse(interaction, `'${name}' is not a player! (${error})`)
             return 
         }
 
-        username = mojangData.username
-        if(permUsersRows.indexOf(discordUser) != -1)
+        let username = mojangData.username,
+         uuid = mojangData.uuid
+        
+        if(username == undefined)
         {
-            res = maliciousMiners.addMM(username, type, discordUser)
-            if(res == 0)
-            {
-                const embed = new EmbedBuilder()
-                .setColor(0x999900)
-                .setTitle("Malicious Miners")
-                .setDescription(`Successfully added ${username} as a ${type} to the database!`)
-                .setFooter({ text: `Made by Ninjune#0670`})
-                interaction.followUp({ embeds: [embed] })
-            }
-            else
-            {
-                const embed = new EmbedBuilder()
-                .setColor(0x990000)
-                .setTitle("Malicious Miners")
-                .setDescription(`Error! ${username} is already on the database! (or type was wrong)`)
-                .setFooter({ text: `Made by Ninjune#0670`})
-                interaction.followUp({ embeds: [embed] })
-            }
+            await badResponse(interaction, "idk, ~line 65 addMMinerCommand")
+            return
         }
-        else
+
+        if(permUsersRows.indexOf(discordID) != -1)
         {
+            let res = maliciousMiners.addMM(uuid, type, discordID, griefcount, visible, proof)
+            
+            if(res == -1)
+            {
+                badResponse(interaction, "incorrect role added")
+                return
+            }
             const embed = new EmbedBuilder()
-            .setColor(0x990000)
-            .setTitle(`Error`)
-            .setDescription("Only people on a certain list have permission to use this command.")
+            .setColor(0x999900)
+            .setTitle("Malicious Miners")
+            .setDescription(`${username} as a ${type} now has ${res} offenses!`)
             .setFooter({ text: `Made by Ninjune#0670`})
             interaction.followUp({ embeds: [embed] })
         }
+        else
+        {
+            await badResponse(interaction, "You do not have permission!", true)
+        }
     },
-};
+}

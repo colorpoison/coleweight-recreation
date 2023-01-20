@@ -1,10 +1,4 @@
-/*
-Updated on 11/7/22 by Ninjune
-- Fixed underscore checker.
-Written on 10/?/22 by Ninjune
-*/
-const { EmbedBuilder } = require("discord.js");
-const fs = require('node:fs');
+const { EmbedBuilder } = require("discord.js")
 const coleweightFunctions = require("../../contracts/coleweightFunctions")
 
 module.exports = {
@@ -55,4 +49,4 @@ module.exports = {
         .setFooter({ text: `Made by Ninjune#0670`})
         interaction.followUp({ embeds: [embed] })
     },
-};
+}

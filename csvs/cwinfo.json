@@ -1,0 +1,172 @@
+[
+    {
+        "cost": 1000000,
+        "path": ["experience_skill_mining"],
+        "nameStringed": "Mining Experience",
+        "category": "experience"
+    },
+    {
+        "cost": 60000,
+        "path": ["mining_core", "powder_mithril_total"],
+        "path2": ["mining_core", "powder_spent_mithril"],
+        "nameStringed": "Mithril Powder",
+        "category": "powder"
+    },
+    {
+        "cost": 60000,
+        "path": ["mining_core", "powder_gemstone_total"],
+        "path2": ["mining_core", "powder_spent_gemstone"],
+        "nameStringed": "Gemstone Powder",
+        "category": "powder"
+    },
+    {
+        "cost": 500000,
+        "path": ["collection", "MITHRIL_ORE"],
+        "nameStringed": "Mithril",
+        "category": "collection"
+    },
+    {
+        "cost": 1400000,
+        "path": ["collection", "GEMSTONE_COLLECTION"],
+        "nameStringed": "Gemstone",
+        "category": "collection"
+    },
+    {
+        "cost": 500000,
+        "path": ["collection", "GOLD_INGOT"],
+        "nameStringed": "Gold Ingot",
+        "category": "collection"
+    },
+    {
+        "cost": 45000,
+        "path": ["collection", "NETHERRACK"],
+        "nameStringed": "Netherrack",
+        "category": "collection"
+    },
+    {
+        "cost": 1000000,
+        "path": ["collection", "DIAMOND"],
+        "nameStringed": "Diamond",
+        "category": "collection"
+    },
+    {
+        "cost": 1000000,
+        "path": ["collection", "ICE"],
+        "nameStringed": "Ice",
+        "category": "collection"
+    },
+    {
+        "cost": 2000000,
+        "path": ["collection", "REDSTONE"],
+        "nameStringed": "Redstone",
+        "category": "collection"
+    },
+    {
+        "cost": 4000000,
+        "path": ["collection", "INK_SACK:4"],
+        "nameStringed": "Lapis",
+        "category": "collection"
+    },
+    {
+        "cost": 9999999999,
+        "path": ["collection", "SULPHUR"],
+        "nameStringed": "Sulphur",
+        "category": "collection"
+    },
+    {
+        "cost": 500000,
+        "path": ["collection", "COAL"],
+        "nameStringed": "Coal",
+        "category": "collection"
+    },
+    {
+        "cost": 400000,
+        "path": ["collection", "EMERALD"],
+        "nameStringed": "Emerald",
+        "category": "collection"
+    },
+    {
+        "cost": 400000,
+        "path": ["collection", "ENDER_STONE"],
+        "nameStringed": "End Stone",
+        "category": "collection"
+    },
+    {
+        "cost": 350000,
+        "path": ["collection", "GLOWSTONE_DUST"],
+        "nameStringed": "Glowstone Dust",
+        "category": "collection"
+    },
+    {
+        "cost": 333333,
+        "path": ["collection", "GRAVEL"],
+        "nameStringed": "Gravel",
+        "category": "collection"
+    },
+    {
+        "cost": 1000000,
+        "path": ["collection", "IRON_INGOT"],
+        "nameStringed": "Iron Ingot",
+        "category": "collection"
+    },
+    {
+        "cost": 300000,
+        "path": ["collection", "MYCEL"],
+        "nameStringed": "Mycelium",
+        "category": "collection"
+    },
+    {
+        "cost": 400000,
+        "path": ["collection", "QUARTZ"],
+        "nameStringed": "Quartz",
+        "category": "collection"
+    },
+    {
+        "cost": 200000,
+        "path": ["collection", "OBSIDIAN"],
+        "nameStringed": "Obsidian",
+        "category": "collection"
+    },
+    {
+        "cost": 150000,
+        "path": ["collection", "SAND:1"],
+        "nameStringed": "Red Sand",
+        "category": "collection"
+    },
+    {
+        "cost": 500000,
+        "path": ["collection", "SAND"],
+        "nameStringed": "Sand",
+        "category": "collection"
+    },
+    {
+        "cost": 1000000,
+        "path": ["collection", "COBBLESTONE"],
+        "nameStringed": "Cobblestone",
+        "category": "collection"
+    },
+    {
+        "cost": 200000,
+        "path": ["collection", "HARD_STONE"],
+        "nameStringed": "Hard Stone",
+        "category": "collection"
+    },
+    {
+        "cost": 2.5,
+        "path": ["bestiary", "kills_scatha_10"],
+        "nameStringed": "Scatha Kills",
+        "category": "miscellaneous"
+    },
+    {
+        "cost": 10,
+        "path": ["bestiary", "kills_worm_5"],
+        "nameStringed": "Worm Kills",
+        "category": "miscellaneous"
+    },
+    {
+        "cost": 2,
+        "path": ["mining_core", "crystals", "jade_crystal", "total_placed"],
+        "nameStringed": "Nucleus Runs",
+        "category": "miscellaneous"
+    }
+]

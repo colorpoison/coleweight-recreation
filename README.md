@@ -1,2 +1,2 @@
 # coleweight-recreation
-A recreation of the Coleweight bot.
+Coleweight bot for https://discord.gg/mining & backend for my site https://ninjune.dev

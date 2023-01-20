@@ -1,30 +1,34 @@
+// if you want to set this up yourself you'll have to do it yourself
 /*
-Written by Ninjune on 10/?/22.
-*/
 const fs = require("fs")
 const express = require("express")
 const coleweightFunctions = require("../contracts/coleweightFunctions")
 const http = require("http")
 const https = require("https")
 const maliciousMiners = require("../contracts/MMinersFunctions")
-const privateKey = fs.readFileSync(__dirname + "/site/key.pem", "utf8")
-const certificate = fs.readFileSync(__dirname + "/site/cert.pem", "utf8")
-const axios = require("axios")
-const claimingFunctions = require ("../contracts/claimingFunctions")
+const privateKey = fs.readFileSync(__dirname + "/key.pem", "utf8")
+const certificate = fs.readFileSync(__dirname + "/site/files/cert.pem", "utf8")
+const website = express()
+const { checkMojangAuth } = require("../contracts/util")
 
-var credentials = {key: privateKey, cert: certificate}
-const app = express()
+let credentials = {key: privateKey, cert: certificate}
 
-app.use(express.static(__dirname + "/site"))
+let httpServer = http.createServer(website)
+let httpsServer = https.createServer(credentials, website)
 
-app.get('/api/coleweight-leaderboard', (req, res) => {
-    let lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv")
-    let payload = lb
+website.use(express.static(__dirname + "/site"))
 
-    res.json(payload)
+website.get('/api/coleweight-leaderboard', (req, res) => {
+    let lb = []
+    if (req.query.length != undefined)
+        lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv", req.query.length)
+    else
+        lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv")
+
+    res.json(lb)
 })
 
-app.get('/api/coleweight', async function (req, res) {
+website.get('/api/coleweight', async function (req, res) {
     try 
     {
         const username = req.query.username
@@ -36,45 +40,22 @@ app.get('/api/coleweight', async function (req, res) {
     }
     catch(e)
     {
-        res.send("Missing required parameter (api/coleweight?username=)")
+        res.send(`Missing required parameter (api/coleweight?username=) ${e}`)
     }
 })
 
-app.get('/api/cwinfo', (req, res) => {
-    let cwValues = fs.readFileSync("./csvs/coleweight.csv", "utf8").split("\r\n"),
-     cwValuesObject = {"powder": [], "collection": [], "miscellaneous": []}
 
-    for(let i = 0; i < cwValues.length; i++)
-    {
-        row = cwValues[i].split(",")
+website.get('/api/cwinfo', (req, res) => {
+    let cwValues = JSON.parse(fs.readFileSync("./csvs/cwinfo.json", "utf8")),
+     cwValuesObject = {"experience": [], "powder": [], "collection": [], "miscellaneous": []}
 
-        if(i == 0)
-            cwValuesObject.experience = 
-            {
-                name: row[0],
-                req: row[1]
-            }
-        else if(i == 1 || i == 2)
-            cwValuesObject.powder.push({
-                name: row[0],
-                req: row[1]
-            })
-        else if(i >= 3 && i <= 24)
-            cwValuesObject.collection.push({
-                name: row[0],
-                req: row[1]
-            })
-        else if(i >= 25)
-            cwValuesObject.miscellaneous.push({
-                name: row[0],
-                req: row[1]
-            })
-    }
+    cwValuesObject = cwValues
         
     res.json(cwValuesObject)
 })
 
-app.get('/api/lbpos', async function (req, res) {
+
+website.get('/api/lbpos', async function (req, res) {
     try 
     {
         const username = req.query.username
@@ -88,10 +69,11 @@ app.get('/api/lbpos', async function (req, res) {
     }
 })
 
-app.get('/api/mminers', async function (req, res) {
+
+website.get('/api/mminers', async function (req, res) {
     if((req.query.username) == undefined)
     {
-        data = maliciousMiners.listMMiners()
+        data = await maliciousMiners.listMMiners(req.query.uuidOnly)
 
         res.json(data)
     }
@@ -104,27 +86,45 @@ app.get('/api/mminers', async function (req, res) {
     }
 })
 
-app.get('/api/claim', async function (req, res) {
-    if(req.query.claimedlobby == undefined)
-        res.json(await claimingFunctions.claim(req))
-    else
-        res.json(await claimingFunctions.checkClaimed(req.query.claimedlobby))
-})
 
-app.get('/api', async function (req, res) {
+website.get('/api', async function (req, res) {
     res.send(`
+    <p>MojangAuth: checks https://sessionserver.mojang.com/session/minecraft/hasJoined for user. Requires "serverID" and "username".</p>
     <p>Avalable endpoints:</p>
     <p>/api/coleweight(?username='...') - username is Minecraft ign or uuid. returns coleweight & related data.</p>
     <p>/api/coleweight-leaderboard - returns coleweight leaderboard</p>
     <p>/api/cwinfo - returns cwinfo</p>
     <p>/api/lbpos(?username='...') - username is Minecraft ign or uuid. returns user positions.</p>
-    <p>/api/mminers[?username='...'] - username is Minecraft ign or uuid. returns if the user is a mminer or all mminers.</p>
-    <p>/api/claim(?claimedlobby='...') || /api/claim(?key='...'&id='...'&type='...') - key is hypixel api key, id is lobby id, type is 'throne' or 'spiral'. returns if the lobby is claimed or whether it is sucessful or not.</p>
+    <p>/api/mminers[?username='...'?uuidOnly='(bool)'] - username is Minecraft ign or uuid. uuidOnly increases speed because it won't convert every uuid to username when reqing the db. returns if the user is a mminer or all mminers.</p>
+    <p>/api/cwusers(type=...) (requires mojangAuth) - gives current coleweight users and adds user onto users or removes user.</p>
     `)
 })
 
-let httpServer = http.createServer(app)
-let httpsServer = https.createServer(credentials, app)
+website.get("/api/cwusers", async function (req, res) {
+    let users = fs.readFileSync("./csvs/cwusers.csv", "utf8").split("\r\n")
+
+    let mojangRes = await checkMojangAuth(req.query.username, req.query.serverID)
+    if(!mojangRes.success) return mojangRes
+
+    let included = false
+    users.forEach((user, index) => {
+        let row = user.split(" ")
+
+        if(row[0] == req.query.username)
+        {
+            if(req.query.type == "remove")
+                users.splice(index, 1)
+            else
+                included = true
+        }
+    })
+    if(!included && req.query.type != "remove") users.push(req.query.username)
+
+    fs.writeFileSync("./csvs/cwusers,csv", users.join("\r\n"))
+    res.json({success: true, users: users})
+})
+
 
 httpServer.listen(80)
 httpsServer.listen(443)
+*/

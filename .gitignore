@@ -1,5 +1,8 @@
 .env
 src/web/site
+src/web/key.pem
 config.json
 .vscode
+.csv
 node_modules
+package-lock.json

@@ -1,12 +1,11 @@
 {
-  "discord": {
-    "token": "Token of bot.",
-    "clientID": "Client ID of bot.",
-    "serverID": "Server ID that the bot is in.",
-    "commandRole": "Unused for now."
-  },
-  "api": {
-    "hypixelAPI": "https://api.hypixel.net",
-    "hypixelAPIkey": "Hypixel api key."
-  }
+    "discord": {
+        "token": "Token of bot.",
+        "clientID": "Client ID of bot. thing below gives /cwbutton, /cwguild, and advanced /findmminer",
+        "staffRoles": ["1010967755031314432", "1022928933299167332", "1009242811801022625", "1003796012118319255"],
+        "owner": "set to your disc name + tag like: Ninjune#0670"
+    },
+    "api": {
+        "hypixelAPIkey": "Hypixel api key."
+    }
 }

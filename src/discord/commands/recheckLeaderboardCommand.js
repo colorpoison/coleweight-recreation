@@ -1,9 +1,7 @@
-/*
-Made by Ninjune on 11/6/22 (Do not use probably...)
-*/
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SelectMenuBuilder } = require("discord.js");
+const { EmbedBuilder } = require("discord.js")
 const coleweightFunctions = require("../../contracts/coleweightFunctions")
 const fs = require("node:fs")
+const config = require('../../../config.json')
 
 module.exports = {
     name: 'recheckleaderboard',
@@ -13,26 +11,24 @@ module.exports = {
         let discordData = await interaction.guild.members.fetch(interaction.user),
          discordUser = discordData.user.username + "#" + discordData.user.discriminator
         
-        if(discordUser != "Ninjune#0670") {interaction.reply("No access."); return}
+        if(discordUser != config.discord.owner) {interaction.followUp("No access."); return}
 		
         try 
         {
             let lbRows = fs.readFileSync("./csvs/coleweightlb.csv", "utf8").split("\r\n")
 
+            const embed = new EmbedBuilder()
+            .setColor(0x009900)
+            .setTitle(`Working... Eta ${Math.ceil((lbRows.length*2)/60/60)}h`)
+            await interaction.followUp({ embeds: [embed] })
+            
             for(let i = 0; i < lbRows.length; i++)
             {
-                let row = lbRows[i].split(" "),
-                 data = await coleweightFunctions.getColeweight(row[0])
+                let row = lbRows[i].split(" ")
                 
                 try 
 				{
-					if(i == 0)
-					{
-						const embed = new EmbedBuilder()
-						.setColor(0x009900)
-						.setTitle(`Working... Eta ${Math.ceil((lbRows.length*2)/60/60)}h`)
-						await interaction.channel.send({ embeds: [embed] })
-					}
+					coleweightFunctions.getColeweight(row[0])
 				} catch {}
             }
         } catch(e)

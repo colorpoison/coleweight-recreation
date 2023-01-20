@@ -1,3 +1,3 @@
-const coleweightFunctions = require("./coleweightFunctions")
+const { autoRemoveGriefers } = require("./MMinersFunctions")
 
-coleweightFunctions.auctionScan([])
+autoRemoveGriefers()
