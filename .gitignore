@@ -1,11 +1,8 @@
+csvs/
 .env
-src/web
-!src/web/express.js
-!src/web/mainServer.js
+src/web/site/
 config.json
 .vscode
-.csv
-node_modules
+node_modules/
 package-lock.json
 logs/
-csvs/
