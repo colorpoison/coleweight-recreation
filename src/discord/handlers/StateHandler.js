@@ -1,5 +1,7 @@
 // Written by DuckySoLucky or Senither on ?/?/??
-const config = require('../../../config.json')
+const config = require("../../../config.json")
+const { logToFile } = require("../../contracts/log")
+const { ActivityType } = require("discord.js")
 
 class StateHandler {
     constructor(discord) {
@@ -7,9 +9,12 @@ class StateHandler {
     }
 
     async onReady() {
-        console.log('Client ready, logged in as ' + this.discord.client.user.tag)
-        this.discord.client.user.setActivity('Calculating ColeWeight.', { type: 'WATCHING' }) // doesn't work /shrug
-        global.bridgeChat = config.discord.guildChatChannel
+        logToFile("Client ready, logged in as " + this.discord.client.user.tag)
+        this.discord.client.user.setActivity("Calculating Coleweight.", {
+            type: 1,
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        })
+        this.discord.client.user.setStatus("online")
         global.uptime = new Date().getTime()
     }
 }

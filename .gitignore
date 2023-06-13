@@ -1,8 +1,11 @@
 .env
-src/web/site
-src/web/key.pem
+src/web
+!src/web/express.js
+!src/web/mainServer.js
 config.json
 .vscode
 .csv
 node_modules
 package-lock.json
+logs/
+csvs/

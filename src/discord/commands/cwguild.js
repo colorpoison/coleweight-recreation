@@ -1,14 +1,15 @@
-const config = require('../../../config.json')
+const config = require("../../../config.json")
 const { EmbedBuilder } = require("discord.js")
-const axios = require('axios')
+const axios = require("axios")
 const coleweightFunctions = require("../../contracts/coleweightFunctions")
-const { discordMarkdownFix, isStaff } = require('../../contracts/util')
-const { badResponse } = require('../../contracts/commandResponses')
+const { discordMarkdownFix, isStaff } = require("../../contracts/util")
+const { badResponse } = require("../../contracts/commandResponses")
+const { logToFile } = require("../../contracts/log")
 
 
-function sort(lb) 
+function sort(lb)
 {
-    for( let i=0; i < lb.length; i += 1 ) 
+    for( let i=0; i < lb.length; i += 1 )
     {
         if(lb[i] == undefined || lb[i] == "") { lb.splice(i, 1); continue }
         let row = lb[i].split(" "), previousRow = ["", Infinity], nextRow = ["", 0], lbTemp = lb[i]
@@ -18,7 +19,7 @@ function sort(lb)
         let cw = parseFloat(row[1]), previousCw = parseFloat(previousRow[1]), nextCw = parseFloat(nextRow[1])
 
         if(cw <= previousCw && cw >= nextCw) { }
-        else if (cw > previousCw) 
+        else if (cw > previousCw)
         {
             lb.splice(i, 1)
             lb.splice(i - 1, 0, lbTemp)
@@ -28,12 +29,12 @@ function sort(lb)
 
 
 module.exports = {
-    name: 'cwguild',
-    description: 'Shows Coleweight details for a guild.',
+    name: "cwguild",
+    description: "Shows Coleweight details for a guild.",
     options: [
         {
-            name: 'guild',
-            description: 'Hypixel Guild',
+            name: "guild",
+            description: "Hypixel Guild",
             type: 3,
             required: true
         }
@@ -42,7 +43,7 @@ module.exports = {
     execute: async (interaction, client) => {
         let user = await interaction.guild.members.fetch(interaction.user)
         if (isStaff(user)) {
-            try 
+            try
             {
                 const guild = interaction.options.getString("guild")
                 const guildData = (await axios.get(`https://api.hypixel.net/guild?key=${config.api.hypixelAPIkey}&name=${guild}`)).data
@@ -51,12 +52,12 @@ module.exports = {
                   lb = [],
                   coleweightSum = 0
                   desc = ""
-                
-                for( let i=0; i < lengthOfGuild; i+=1 ) 
+
+                for( let i=0; i < lengthOfGuild; i+=1 )
                 {
                     let member = guildData.guild.members[i].uuid
                     let data = await coleweightFunctions.getColeweight(member, undefined, undefined, true)
-                    
+
                     if (data?.name == undefined) continue
                     lb.push(data.name + " " + data?.coleweight ?? 0)
                     coleweightSum += data?.coleweight ?? 0
@@ -77,7 +78,7 @@ module.exports = {
                         interaction.editReply({ embeds: [embed] })
                     }
                 }
-              
+
                 for(let i = 0; i < lb.length; i++)
                 {
                     sort(lb)
@@ -85,7 +86,7 @@ module.exports = {
 
                 for(let i = 0; i < lb.length; i++)
                 {
-                    let row = lb[i].split(" ")     
+                    let row = lb[i].split(" ")
                     tempName = discordMarkdownFix(row[0])
                     desc = desc + (i+1) + ". " + tempName + " " + row[1] + "\r\n"
                 }
@@ -94,10 +95,10 @@ module.exports = {
               .setColor(0x0099FF)
               .setTitle(`Average ColeWeight of ${guild}: ${Math.ceil((coleweightSum / lengthOfGuild) * 100) / 100}`)
               .setDescription(desc)
-              .setFooter({ text: `Made by Ninjune#0670`})
+              .setFooter({ text: "Made by Ninjune#0670"})
               interaction.editReply({ embeds: [embed] })
             }
-            catch(e) { "cwguild.js: " + console.log(e)}
+            catch(e) { logToFile("cwguild.js: " + e)}
         }
         else
         {

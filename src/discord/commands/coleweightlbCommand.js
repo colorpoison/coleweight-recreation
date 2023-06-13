@@ -1,33 +1,31 @@
 const { EmbedBuilder } = require("discord.js")
+const fs = require("node:fs")
 const coleweightFunctions = require("../../contracts/coleweightFunctions")
 
 module.exports = {
-    name: 'coleweightlb',
-    description: 'Coleweight Leaderboard',
+    name: "coleweightlb",
+    description: "Coleweight Leaderboard",
     options: [{
-      name: 'page',
-      description: 'Page #',
+      name: "page",
+      description: "Page #",
       type: 3,
       required: false
     }],
 
     execute: async (interaction, client) => {
         let desc = ""
-        var page = interaction.options.getString("page")
-        
+        let page = interaction.options.getString("page")
+        let rows = fs.readFileSync("./csvs/coleweightlb.csv", "utf8").split("\r\n") // get rows to check length for max page
+        if(page != undefined && (page > Math.ceil(rows.length/20) || page < 1)) desc = "That is not a valid page! Current max page is: " + Math.ceil(rows.length/20)
+        if(page != undefined) page--
+        let lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv", 20, ((page ?? 0)*20)+1)
 
-        lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv")
-        
-        if(page == undefined) { page = 1 }
 
-        if(lb[page*20-20] == undefined) 
+        if(desc == "") // if page > max page
         {
-            desc = "That is not a valid page! Current max page is: " + Math.ceil(lb.length/20)
-        }
-        else {
-            for(let i = (page*20)-20; i < page*20; i++) 
+            for(let i = 0; i < 20; i++)
             {
-                if(lb[i] != undefined) 
+                if(lb[i] != undefined)
                 {
                     for(let j = 0; j < lb[i].name.length; j++)
                     {
@@ -37,16 +35,16 @@ module.exports = {
                             j++
                         }
                     }
-                    desc = desc + (i+1) + "." + " " + lb[i].name + " " + lb[i].coleweight + "\r\n"
+                    desc = desc + lb[i].rank + "." + " " + lb[i].name + " " + lb[i].coleweight + "\r\n"
                 }
             }
         }
-   
+
         const embed = new EmbedBuilder()
         .setColor(0x0099FF)
         .setTitle("ColeWeight leaderboard")
         .setDescription(`${desc}`)
-        .setFooter({ text: `Made by Ninjune#0670`})
+        .setFooter({ text: "Made by Ninjune#0670"})
         interaction.followUp({ embeds: [embed] })
     },
 }

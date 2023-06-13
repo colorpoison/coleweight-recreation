@@ -1,35 +1,21 @@
-// if you want to set this up yourself you'll have to do it yourself
-/*
 const fs = require("fs")
 const express = require("express")
 const coleweightFunctions = require("../contracts/coleweightFunctions")
-const http = require("http")
-const https = require("https")
 const maliciousMiners = require("../contracts/MMinersFunctions")
-const privateKey = fs.readFileSync(__dirname + "/key.pem", "utf8")
-const certificate = fs.readFileSync(__dirname + "/site/files/cert.pem", "utf8")
 const website = express()
 const { checkMojangAuth } = require("../contracts/util")
 
-let credentials = {key: privateKey, cert: certificate}
-
-let httpServer = http.createServer(website)
-let httpsServer = https.createServer(credentials, website)
-
 website.use(express.static(__dirname + "/site"))
 
-website.get('/api/coleweight-leaderboard', (req, res) => {
+website.get("/api/coleweight-leaderboard", (req, res) => {
     let lb = []
-    if (req.query.length != undefined)
-        lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv", req.query.length)
-    else
-        lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv")
+    lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv", req.query.length ?? 5000, req.query.start ?? 1)
 
     res.json(lb)
 })
 
-website.get('/api/coleweight', async function (req, res) {
-    try 
+website.get("/api/coleweight", async function (req, res) {
+    try
     {
         const username = req.query.username
         let data = await coleweightFunctions.getColeweight(username)
@@ -45,18 +31,18 @@ website.get('/api/coleweight', async function (req, res) {
 })
 
 
-website.get('/api/cwinfo', (req, res) => {
+website.get("/api/cwinfo", (req, res) => {
     let cwValues = JSON.parse(fs.readFileSync("./csvs/cwinfo.json", "utf8")),
      cwValuesObject = {"experience": [], "powder": [], "collection": [], "miscellaneous": []}
 
     cwValuesObject = cwValues
-        
+
     res.json(cwValuesObject)
 })
 
 
-website.get('/api/lbpos', async function (req, res) {
-    try 
+website.get("/api/lbpos", async function (req, res) {
+    try
     {
         const username = req.query.username
         let data = await coleweightFunctions.lbreq(username)
@@ -70,10 +56,10 @@ website.get('/api/lbpos', async function (req, res) {
 })
 
 
-website.get('/api/mminers', async function (req, res) {
+website.get("/api/mminers", async function (req, res) {
     if((req.query.username) == undefined)
     {
-        data = await maliciousMiners.listMMiners(req.query.uuidOnly)
+        let data = await maliciousMiners.listMMiners(req.query.uuidOnly)
 
         res.json(data)
     }
@@ -87,7 +73,7 @@ website.get('/api/mminers', async function (req, res) {
 })
 
 
-website.get('/api', async function (req, res) {
+website.get("/api", async function (req, res) {
     res.send(`
     <p>MojangAuth: checks https://sessionserver.mojang.com/session/minecraft/hasJoined for user. Requires "serverID" and "username".</p>
     <p>Avalable endpoints:</p>
@@ -99,6 +85,7 @@ website.get('/api', async function (req, res) {
     <p>/api/cwusers(type=...) (requires mojangAuth) - gives current coleweight users and adds user onto users or removes user.</p>
     `)
 })
+
 
 website.get("/api/cwusers", async function (req, res) {
     let users = fs.readFileSync("./csvs/cwusers.csv", "utf8").split("\r\n")
@@ -120,11 +107,31 @@ website.get("/api/cwusers", async function (req, res) {
     })
     if(!included && req.query.type != "remove") users.push(req.query.username)
 
-    fs.writeFileSync("./csvs/cwusers,csv", users.join("\r\n"))
+    fs.writeFileSync("./csvs/cwusers.csv", users.join("\r\n"))
     res.json({success: true, users: users})
 })
 
+let routes = JSON.parse(fs.readFileSync("./csvs/routeDB.csv"))
+website.get("/api/cw/routes", function (req, res) {
+    if(req.query.route == undefined) // get route names
+    {
+        let routeNames = []
+        routes.forEach(route => {
+            routeNames.push({name: route.name, description: route.description})
+        })
 
-httpServer.listen(80)
-httpsServer.listen(443)
-*/
+        res.json(routeNames)
+    }
+    else
+        res.json(routes.find(route => route.name == req.query.route) ?? {found: false})
+})
+
+//httpServer.listen(80)
+//httpsServer.listen(443)
+
+function updateRoutes() // COULD CAUSE ERRORS
+{
+    routes = JSON.parse(fs.readFileSync("./csvs/routeDB.csv"))
+}
+
+module.exports = { updateRoutes, website }

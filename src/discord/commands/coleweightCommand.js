@@ -1,21 +1,22 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SelectMenuBuilder } = require("discord.js")
 const coleweightFunctions = require("../../contracts/coleweightFunctions")
-const { cwResponse } = require("../../contracts/commandResponses")
+const { cwResponse, badResponse } = require("../../contracts/commandResponses")
+const { logToFile } = require("../../contracts/log")
 
 
 module.exports = {
-    name: 'coleweight',
-    description: 'Returns the coleweight of the user.',
+    name: "coleweight",
+    description: "Returns the coleweight of the user.",
     options: [
         {
-            name: 'name',
-            description: 'Minecraft Username',
+            name: "name",
+            description: "Minecraft Username",
             type: 3,
             required: false
         },
         {
-            name: 'profile',
-            description: 'Minecraft Profile',
+            name: "profile",
+            description: "Minecraft Profile",
             type: 3,
             required: false
         }
@@ -30,7 +31,10 @@ module.exports = {
 
             if (data?.name == undefined)
             {
-                badName(interaction, name)
+                if(data?.code)
+                    await badResponse(interaction, data.error)
+                else
+                    await badName(interaction, name)
 				return
             }
             for(let i = 0; i < data.profiles.length; i++)
@@ -40,15 +44,15 @@ module.exports = {
             const row = new ActionRowBuilder()
             .addComponents(
                 new SelectMenuBuilder()
-                .setCustomId('profileSelect')
-                .setPlaceholder('Choose Profile')
+                .setCustomId("profileSelect")
+                .setPlaceholder("Choose Profile")
                 .addOptions(profileSelectOptions)
             ),
             row2 = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                .setCustomId('advancedStatsButton')
-                .setLabel('Advanced Stats')
+                .setCustomId("advancedStatsButton")
+                .setLabel("Advanced Stats")
                 .setStyle(ButtonStyle.Primary),
             )
 
@@ -57,11 +61,11 @@ module.exports = {
         {
             const embed = new EmbedBuilder()
             .setColor(0x0099FF)
-            .setTitle(`Error`)
+            .setTitle("Error")
             .setDescription(`Enter a valid name! (or /link (username)) (if you think this is an error report this to Ninjune#0670: ${e})`)
-            .setFooter({ text: `Made by Ninjune#0670`})
+            .setFooter({ text: "Made by Ninjune#0670"})
             interaction.followUp({ embeds: [embed] })
-            console.log(e)
+            logToFile(e.stack)
         }
     }
 }
@@ -70,9 +74,9 @@ async function badName(interaction, name)
 {
 	const embed = new EmbedBuilder()
 	.setColor(0x0099FF)
-	.setTitle(`Error`)
+	.setTitle("Error")
 	.setDescription(`'${name}' not a valid name! \n'/link (username)' to link disc acc and Hypixel (must be linked in Hypixel.)`)
-	.setFooter({ text: `Made by Ninjune#0670`})
+	.setFooter({ text: "Made by Ninjune#0670"})
 	await interaction.followUp({ embeds: [embed] })
 	return
 }

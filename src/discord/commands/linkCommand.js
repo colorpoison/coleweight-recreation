@@ -1,17 +1,18 @@
 const { EmbedBuilder } = require("discord.js")
 const config = require("../../../config.json")
-const axios = require('axios')
-const fs = require('node:fs')
-const { getMojangData } = require("../../contracts/coleweightFunctions")
+const axios = require("axios")
+const fs = require("node:fs")
+const { getMojangData } = require("../../contracts/api")
 const { badResponse } = require("../../contracts/commandResponses")
+const { logToFile } = require("../../contracts/log")
 
 module.exports = {
-    name: 'link',
-    description: 'Sets inputted name to default for /coleweight.',
+    name: "link",
+    description: "Sets inputted name to default for /coleweight.",
     options: [
     {
-        name: 'name',
-        description: 'Minecraft Username',
+        name: "name",
+        description: "Minecraft Username",
         type: 3,
         required: true
     }
@@ -23,36 +24,38 @@ module.exports = {
              mojangData = "",
              userData = "",
              user = "",
-             discRows = fs.readFileSync("./csvs/discord.csv", "utf-8").split('\r\n'),
+             discRows = fs.readFileSync("./csvs/discord.csv", "utf-8").split("\r\n"),
              discordPath = "./csvs/discord.csv",
              userID,
              writeData
-            
-            try 
+
+            try
             {
                 let discordData = await interaction.guild.members.fetch(interaction.user)
                 user = discordData.user.username + "#" + discordData.user.discriminator
                 userID = discordData.user.id
             }
-            catch 
+            catch
             {
-                console.log("Error! " + e)
+                logToFile("Error! " + e)
             }
 
 
             mojangData = await getMojangData(name)
             name = mojangData.username
             uuid = mojangData.uuid
-            if(mojangData == 101)
+
+            if(mojangData.error || name == undefined || uuid == undefined)
             {
-                badResponse(interaction, `The bot may be rate limited on Mojang API (or name is wrong.)`)
+                badResponse(interaction, `The bot may be rate limited on Mojang API (or name is wrong.) Code: ${mojangData.code}`)
                 return
             }
-            try 
+
+            try
             {
                 userData = (await axios.get(`https://api.hypixel.net/player?key=${config.api.hypixelAPIkey}&uuid=${uuid}`)).data
             }
-            catch(e) 
+            catch(e)
             {
                 badResponse(interaction, `DM Nin (linkCommand ${new Error().lineNumber}): ${e}`)
                 return
@@ -74,17 +77,17 @@ module.exports = {
 
                 const embed = new EmbedBuilder()
                 .setColor(0x0099FF)
-                .setTitle(`Success!`)
+                .setTitle("Success!")
                 .setDescription(`Successfully linked ${user} to ${name}!`)
-                .setFooter({ text: `Made by Ninjune#0670`})
+                .setFooter({ text: "Made by Ninjune#0670"})
                 interaction.followUp({ embeds: [embed] })
             }
-            else 
+            else
                 badResponse(interaction, `${name} is not linked to ${user} in Hypixel!`)
-        } catch(e) 
+        } catch(e)
         {
-            console.log(e)
-            badResponse(interaction, `Enter a valid name! (or change your nickname to minecraft ign)`)
+            logToFile(e)
+            badResponse(interaction, "Enter a valid name! (or change your nickname to minecraft ign)")
         }
     }
 }
