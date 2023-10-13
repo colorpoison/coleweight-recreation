@@ -5,6 +5,12 @@ const maliciousMiners = require("../contracts/MMinersFunctions")
 const website = express()
 const { checkMojangAuth } = require("../contracts/util")
 
+website.options("/", (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "https://ninjune.dev")
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT")
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type")
+    res.sendStatus(204)
+})
 website.use(express.static(__dirname + "/site"))
 
 website.get("/api/coleweight-leaderboard", (req, res) => {

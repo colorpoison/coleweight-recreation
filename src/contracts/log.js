@@ -1,5 +1,6 @@
 const fs = require("node:fs")
 const logFile = `./logs/log-${new Date().toISOString()}.txt`
+const util = require("util")
 logToFile("Log file created: " + logFile)
 
 function logToFile(message)
