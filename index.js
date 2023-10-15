@@ -9,7 +9,7 @@ const app = require("./src/Application")
 const server = require("./src/web/mainServer")
 const scanner = require("./src/contracts/scanner")
 // creating files if don't exist
-const files = ["coleweightlb backup", "coleweightlb", "discord", "maliciousMiners", "mminerUsers", "nameDB"]
+const files = ["coleweightlb backup", "coleweightlb", "discord", "maliciousMiners", "mminerUsers", "nameDB", "lastAlloy", "bannedIps"]
 files.forEach(file => {
     if(!fs.existsSync("./csvs/" + file + ".csv")) fs.writeFileSync("./csvs/" + file + ".csv", "")
 })

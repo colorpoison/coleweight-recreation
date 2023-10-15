@@ -2,6 +2,7 @@ const fs = require("fs")
 const express = require("express")
 const coleweightFunctions = require("../contracts/coleweightFunctions")
 const maliciousMiners = require("../contracts/MMinersFunctions")
+const alloyFunctions = require("../contracts/alloyFunctions")
 const website = express()
 const { checkMojangAuth } = require("../contracts/util")
 
@@ -16,8 +17,18 @@ website.use(express.static(__dirname + "/site"))
 website.get("/api/coleweight-leaderboard", (req, res) => {
     let lb = []
     lb = coleweightFunctions.getLeaderboard("./csvs/coleweightlb.csv", req.query.length ?? 5000, req.query.start ?? 1)
-
     res.json(lb)
+})
+
+website.put("/api/alloy-drop/on-drop", (req, res) => {
+    if(alloyFunctions.alloyCheck(req.query.username, req.ip))
+        res.send("Success")
+    else
+        res.send("Your ip has been banned")
+})
+
+website.get("/api/alloy-drop/last", (req, res) => {
+    res.send(alloyFunctions.getLastAlloy().toString())
 })
 
 website.get("/api/coleweight", async function (req, res) {
@@ -89,6 +100,8 @@ website.get("/api", async function (req, res) {
     <p>/api/lbpos(?username='...') - username is Minecraft ign or uuid. returns user positions.</p>
     <p>/api/mminers[?username='...'?uuidOnly='(bool)'] - username is Minecraft ign or uuid. uuidOnly increases speed because it won't convert every uuid to username when reqing the db. returns if the user is a mminer or all mminers.</p>
     <p>/api/cwusers(type=...) (requires mojangAuth) - gives current coleweight users and adds user onto users or removes user.</p>
+    <p>/api/alloy-drop/on-drop(?username='...') - username is Minecraft ign or uuid. Notifies the server about a divans alloy drop. Only call this if you know what you are doing.</p>
+    <p>/api/alloy-drop/last - returns the last known alloy drop timestamp rounded to minutes in UTC</p>
     `)
 })
 

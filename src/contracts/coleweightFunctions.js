@@ -4,6 +4,7 @@ const fs = require("node:fs")
 const { getObjectValue } = require("./util")
 const { getMojangData, reqHypixelApi } = require("./api")
 const { logToFile } = require("./log")
+var pausedUntil = -1
 
 function sleep(ms)
 {
@@ -28,8 +29,45 @@ async function getLinkName(name, data)
         return 0
     }
 }
-
-async function getColeweight(name = undefined, profile = undefined, discordData = undefined, guildCheck = false, tries = 1)
+async function doPause()
+{
+    millis=pausedUntil-new Date().getTime()
+    if(millis>0){
+        await sleep(millis)
+    }
+}
+async function setPause(millis)
+{
+    pausedUntil=millis+new Date().getTime()
+    await sleep(millis)
+}
+async function getUserData(uuid){
+    return getUserInfo(uuid)
+}
+async function getUserAuctions(uuid){
+    return getUserInfo(uuid,"/skyblock/auction","player")
+}
+async function getUserInfo(uuid, subsite="/skyblock/profiles", playerNaming="uuid",  tries = 1)
+{
+    await doPause()
+    userData = await reqHypixelApi(`${subsite}?key=${config.api.hypixelAPIkey}&${playerNaming}=${uuid}`)
+    if(userData.code === 429)
+    {
+        logToFile(" (Hypixel) Pausing for 60 seconds!")
+        await setPause(60000)
+        if(tries <= 2)
+            return getUserData(uuid, tries+1)
+    }
+    else if(userData.code === 502)
+    {
+        logToFile(" (Hypixel) Bad gateway!")
+        await setPause(3000)
+        if(tries <= 3)
+            return getUserData(uuid, tries+1)
+    }
+    return userData
+}
+async function getColeweight(name = undefined, profile = undefined, discordData = undefined, guildCheck = false)
 {
     let data = {"experience" : {}, "powder": {}, "collection": {}, "miscellaneous": {}, profiles: [] },
      userData
@@ -61,25 +99,9 @@ async function getColeweight(name = undefined, profile = undefined, discordData 
     uuid = mojangData.uuid
     if(!guildCheck) logToFile("name: " + name + "\nuuid: " + uuid)
 
-    userData = await reqHypixelApi(`/skyblock/profiles?key=${config.api.hypixelAPIkey}&uuid=${uuid}`)
-    if(userData.code === 429)
-    {
-        logToFile(" (Hypixel) Pausing for 60 seconds!")
-        await sleep(60000)
-        if(tries <= 2)
-            return getColeweight(name, profile, discordData, guildCheck, ++tries)
-        else
-            return userData
-    }
-    else if(userData.code === 502)
-    {
-        logToFile(" (Hypixel) Bad gateway!")
-        await sleep(3000)
-        if(tries <= 3)
-            return getColeweight(name, profile, discordData, guildCheck, ++tries)
-        else
-            return userData
-    }
+    userData = await getUserData(uuid)
+    if(userData.code==429||userData.code==502)
+        return userData
 
     if(userData?.profiles == undefined) return { code: 101, error: "Unknown1." } // user data is empty (wrong uuid or api rate limit)
 
@@ -324,4 +346,4 @@ async function lbreq(username)
     return data
 }
 
-module.exports = { getColeweight, getLeaderboard, auctionScan, sleep, lbreq }
+module.exports = { getColeweight, getLeaderboard, auctionScan, sleep, lbreq, getUserData, getUserAuctions }
