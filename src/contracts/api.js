@@ -1,6 +1,7 @@
 const axios = require("axios")
 const fs = require("node:fs")
 const { logToFile, dirToFile } = require("./log")
+const nbt = require("prismarine-nbt")
 async function reqMojangApis(name) {
     try {
         try {
@@ -143,5 +144,15 @@ function catchError(error)
     dirToFile(error.config, "error.config")
 }
 
-
-module.exports = { getMojangData, reqHypixelApi }
+async function toJson(inventoryCompressed){
+    try{
+        var strData = atob(inventoryCompressed)
+        var invData = strData.split("").map(function(x){return x.charCodeAt(0)})
+        let buffer = Buffer.from(invData)
+        const result = await nbt.parse(buffer)
+        return result.parsed
+    }catch(e){
+        return undefined
+    }
+}
+module.exports = { getMojangData, reqHypixelApi, toJson }
