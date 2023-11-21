@@ -1,24 +1,22 @@
-//Written by ryt
-
 const config = require("../../config.json")
 const coleweightFunctions = require("./coleweightFunctions")
 const { getMojangData, toJson } = require("./api")
 const inventories = ["backpack_contents", "ender_chest_contents", "inv_contents"]
 const fs = require("node:fs")
 const { logToFile } = require("./log")
-var lastAlloy=-2
-var bannedIps = undefined
-var beingChecked = new Set()
-var strikesByIp = new Map()
+let lastAlloy=-2
+let bannedIps = undefined
+let beingChecked = new Set()
+let strikesByIp = new Map()
 
 function alloyCheck(name,ip){
     if(getBannedIps().has(ip))
         return false
     if(beingChecked.has(name))
         return true
-    if(!(ip in strikesByIp)){
+    if(!(ip in strikesByIp) || (strikesByIp[ip]==undefined))
         strikesByIp[ip]=0
-    }
+
     let strikes=strikesByIp[ip]
     strikesByIp[ip]++
     setTimeout(function(){strikesByIp[ip]--},5*60*60*1000) //strikes are reset after 5 hours
@@ -31,7 +29,7 @@ function alloyCheck(name,ip){
 }
 function getBannedIps(){
     if(bannedIps == undefined){
-        ips=fs.readFileSync("./csvs/bannedIps.csv").toString().split("\n")
+        let ips=fs.readFileSync("./csvs/bannedIps.csv").toString().split("\n")
         ips.pop()
         bannedIps = new Set(ips)
     }
@@ -44,8 +42,8 @@ function banIp(ip){
     fs.appendFile("./csvs/bannedIps.csv", ip+"\n", function (err) {
         if (err) {
             logToFile(err.message)
-        } 
-      })
+        }
+    })
 }
 async function scheduleAlloyTests(name, amount){
     if(amount<=0){
@@ -56,7 +54,7 @@ async function scheduleAlloyTests(name, amount){
         setTimeout(function(){scheduleAlloyTests(name,amount-1)},10*1000)
     else
         beingChecked.delete(name)
-}   
+}
 async function attemptAlloyUpdate(name){
     let alloyTime = await newestAlloyTimestamp(name)
     if(alloyTime>getLastAlloy()){
@@ -67,7 +65,7 @@ async function attemptAlloyUpdate(name){
     return false
 }
 function getLastAlloy(){
-    
+
     if(lastAlloy==-2){
         lastAlloyString=fs.readFileSync("./csvs/lastAlloy.csv").toString()
         if(!(lastAlloyString === ""))
@@ -80,21 +78,22 @@ function setLastAlloy(timestamp){
     fs.writeFile("./csvs/lastAlloy.csv",timestamp.toString(),(err) => {
         if (err) {
             logToFile(err.toString())
-        } 
+        }
       })
 }
 async function newestAlloyTimestamp(name){
     let mojangData = await getMojangData(name)
-    if(mojangData.error) 
+    if(mojangData.error)
         return -1
     let userData = await coleweightFunctions.getUserData(mojangData.uuid)
     if(userData.code == 429 || userData.code == 502 || userData?.profiles == undefined)
         return -1
-    let res = -1;
+    let res = -1
     for(let i = 0; i < userData.profiles.length; i++){
-        if(userData.profiles[i]?.members[mojangData.uuid]==undefined)
+        inv = userData.profiles[i]?.members[mojangData.uuid]?.inventory
+        if(inv == undefined)
             continue
-        res = Math.max(res,await newestAlloyTimestampProfile(userData.profiles[i].members[mojangData.uuid]))
+        res = Math.max(res,await newestAlloyTimestampInventories(inv))
     }
     return Math.max(res,await newestAlloyTimestampAuction(mojangData.uuid))
 }
@@ -108,17 +107,17 @@ async function newestAlloyTimestampAuction(uuid){
     }
     return res
 }
-async function newestAlloyTimestampProfile(profile){
-    if(!("inv_contents" in profile)||!("ender_chest_contents" in profile)){
+async function newestAlloyTimestampInventories(inv){
+    if(!("inv_contents" in inv)||!("ender_chest_contents" in inv)){
         return -1
     }
-    let list = [profile["inv_contents"],profile["ender_chest_contents"]]
-    if("backpack_contents" in profile){
+    let list = [inv["inv_contents"],inv["ender_chest_contents"]]
+    if("backpack_contents" in inv){
         let i = 0
-        while(i in profile["backpack_contents"])
-            list.push(profile["backpack_contents"][i++])
+        while(i in inv["backpack_contents"])
+            list.push(inv["backpack_contents"][i++])
     }
-    let res = -1;
+    let res = -1
     for(let i = 0; i < list.length; i++){
             res = Math.max(res,newestAlloyTimestampInventory((await toJson(list[i]?.data))?.value?.i?.value?.value))
     }
@@ -127,7 +126,7 @@ async function newestAlloyTimestampProfile(profile){
 function newestAlloyTimestampInventory(inventory){
     if(inventory==undefined)
         return -1
-    let res = -1;
+    let res = -1
     for(let i = 0; i < inventory.length; i++){
         res = Math.max(res,alloyTimestamp(inventory[i]))
     }
@@ -141,6 +140,6 @@ function alloyTimestamp(item){
     return hypixelDateToUTC(extraAttributes.timestamp.value)
 }
 function hypixelDateToUTC(date){
-    return new Date(new Date(date).getTime()+4*3600000).getTime()
+    return new Date(date + " EDT-0400").getTime()
 }
-module.exports = {alloyCheck, getLastAlloy}
+module.exports = {alloyCheck, getLastAlloy} 

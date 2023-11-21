@@ -101,7 +101,7 @@ async function reqHypixelApi(sublink)
     let hypixelData
     try
     {
-        hypixelData = (await axios.get("https://api.hypixel.net" + sublink)).data
+        hypixelData = (await axios.get("https://api.hypixel.net/v2" + sublink)).data
         return hypixelData
     }
     catch(err)
