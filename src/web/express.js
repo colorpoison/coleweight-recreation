@@ -20,11 +20,15 @@ website.get("/api/coleweight-leaderboard", (req, res) => {
     res.json(lb)
 })
 
-website.put("/api/alloy-drop/on-drop", (req, res) => {
-    if(alloyFunctions.alloyCheck(req.query.username, req.ip))
-        res.send("Success")
+website.get("/api/alloy-drop/on-drop", (req, res) => {
+    let response = {success: false, reason: ""}
+
+    if(alloyFunctions.alloyCheck(req.query.username, req.headers["x-forwarded-for"]))
+        response.success = true
     else
-        res.send("Your ip has been banned")
+        response.reason = "You are ip banned."
+
+    res.json(response)
 })
 
 website.get("/api/alloy-drop/last", (req, res) => {
